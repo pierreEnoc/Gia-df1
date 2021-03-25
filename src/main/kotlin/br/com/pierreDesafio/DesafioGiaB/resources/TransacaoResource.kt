@@ -1,30 +1,36 @@
 package br.com.pierreDesafio.DesafioGiaB.resources
 
-import br.com.pierreDesafio.DesafioGiaB.entities.Transacao
 import br.com.pierreDesafio.DesafioGiaB.entities.TrasacaoData
+import br.com.pierreDesafio.DesafioGiaB.service.TransacaoService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestMethod
-import org.springframework.web.bind.annotation.RestController
-import java.util.concurrent.ConcurrentHashMap
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.*
 
 @RestController
-//@RequestMapping(value = ["/{id}"], method = arrayOf(RequestMethod.GET))
+@RequestMapping(value = ["/transacoes"])
 class TransacaoResource {
     
     @Autowired
-    lateinit var transacoes: ConcurrentHashMap<Long, TrasacaoData>
+    lateinit var service: TransacaoService
     
-    @RequestMapping(value = ["/{id}"], method = arrayOf(RequestMethod.GET))
-    fun sayHello(): String {
-      return ("Hello word")
+    @GetMapping("/{id}")
+    fun getById(@PathVariable id: Long): ResponseEntity<TrasacaoData?> {
+        var transacao = service.getById(id)
+        var status = if (transacao == null) HttpStatus.NOT_FOUND else HttpStatus.OK
+        return ResponseEntity(transacao, status)
     }
     
-    @RequestMapping(value = ["/transacoes"], method = arrayOf(RequestMethod.GET))
-    fun getAllTransacao() =  transacoes.entries
     
-    
-    @RequestMapping(value = ["/transacoes/{id}"], method = arrayOf(RequestMethod.GET))
-    fun transacaGetById(@PathVariable id:Long) =  transacoes[id]
+    @RequestMapping
+    fun getAllTransacao(@RequestParam(required = false, defaultValue = "") descricaoFilter: String):
+            ResponseEntity<List<TrasacaoData>> {
+        var status = HttpStatus.OK
+        val listTrasacoes = service.searchByDescricao(descricaoFilter)
+        if (listTrasacoes.size == 0) {
+            status = HttpStatus.NOT_FOUND
+        }
+        return ResponseEntity(listTrasacoes, status)
+    }
+   
 }
