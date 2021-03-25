@@ -1,6 +1,7 @@
 package br.com.pierreDesafio.DesafioGiaB.resources
 
 import br.com.pierreDesafio.DesafioGiaB.entities.TrasacaoData
+import br.com.pierreDesafio.DesafioGiaB.exception.TransacaoNotFoundException
 import br.com.pierreDesafio.DesafioGiaB.service.TransacaoService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -16,11 +17,10 @@ class TransacaoResource {
     
     @GetMapping("/{id}")
     fun getById(@PathVariable id: Long): ResponseEntity<TrasacaoData?> {
-        var transacao = service.getById(id)
-        var status = if (transacao == null) HttpStatus.NOT_FOUND else HttpStatus.OK
-        return ResponseEntity(transacao, status)
+        var transacao = service.getById(id) ?:
+            throw TransacaoNotFoundException("transacao ${id} nao localizada")
+        return ResponseEntity(transacao, HttpStatus.OK)
     }
-    
     
     @RequestMapping
     fun getAllTransacao(@RequestParam(required = false, defaultValue = "") descricaoFilter: String):
